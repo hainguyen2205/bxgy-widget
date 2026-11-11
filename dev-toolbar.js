@@ -8,11 +8,22 @@
         get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } },
         set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
     };
-    const KEY = 'bxgy-dev-preview-v3';
+    // Mỗi trang preview (index / ecomposer) lưu lựa chọn riêng
+    const KEY = 'bxgy-dev-preview-v3' + (document.body.dataset.devPage ? '-' + document.body.dataset.devPage : '');
     const BASELINE_WIDTH = 560;
     const TYPE = { fixed: 'Fixed', mixMatch: 'Mix & match', spend: 'Spend' };
 
-    const prefs = Object.assign({}, window.BXGY.DEFAULTS, { width: BASELINE_WIDTH }, store.get(KEY));
+    const prefs = Object.assign({}, window.BXGY.DEFAULTS, { width: BASELINE_WIDTH, theme: 'ec' }, store.get(KEY));
+
+    /* ---------- stylesheet: EComposer (bxgy-ec2026.css) | Prototype (style.css) ---------- */
+    const THEMES = { ec: 'bxgy-ec2026.css', proto: 'style.css' };
+    const sheetLink = document.querySelector('[data-dev-stylesheet]');
+    function setTheme(theme) {
+        if (!sheetLink) return; // trang không có option Style (ecomposer.html)
+        const href = THEMES[theme] || THEMES.ec;
+        if (sheetLink.getAttribute('href') !== href) sheetLink.setAttribute('href', href);
+    }
+    setTheme(prefs.theme);
 
     /* ---------- width ---------- */
     const range = document.querySelector('[data-dev-width-range]');
@@ -66,6 +77,7 @@
         startSeg.classList.toggle('is-disabled', noStart);
         startSeg.querySelectorAll('button').forEach((b) => (b.disabled = noStart));
 
+        setTheme(prefs.theme);
         store.set(KEY, prefs);
         window.BXGY.load(prefs);
     }

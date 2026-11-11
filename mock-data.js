@@ -20,6 +20,23 @@ window.BXGY_MOCK = (function () {
 
     const SIZES = ['S', 'M', 'L'];
 
+    // Ảnh sản phẩm thật (Unsplash, free license) — crop vuông 400px qua Imgix params.
+    // Chỉ chọn ảnh sáng màu: độ sáng trung bình ≥ 165/255 (đo bằng canvas).
+    const img = (id) => `https://images.unsplash.com/${id}?w=400&h=400&fit=crop&auto=format&q=70`;
+    const TEE_IMAGES = [
+        'photo-1620799139652-715e4d5b232d', 'photo-1759572095329-1dcf9522762b', 'photo-1618677603286-0ec56cb6e1b5',
+        'photo-1620799139507-2a76f79a2f4d', 'photo-1778426140719-26f148a046ce', 'photo-1651761179569-4ba2aa054997',
+        'photo-1529374255404-311a2a4f1fd9', 'photo-1778671394516-8270eac13c42', 'photo-1737094540182-d602f8a7dd1d',
+        'photo-1759572095384-1a7e646d0d4f', 'photo-1759572095317-3a96f9a98e2b', 'photo-1620799139834-6b8f844fbe61',
+        'photo-1716951980904-fbe5c5aa2279', 'photo-1716951988375-37d5793385d0', 'photo-1716951918731-77d7682b4e63',
+    ];
+    const GIFT_IMAGES = [
+        'photo-1691256676359-20e5c6d4bc92', 'photo-1544816155-12df9643f363', 'photo-1615486364462-ef6363adbc18',
+        'photo-1544967919-44c1ef2f9e7a', 'photo-1741916541139-244d7c3a44d8', 'photo-1789925941317-23b34b25c86f',
+        'photo-1551546785-423f456af418', 'photo-1492051337034-f05bb38b404b', 'photo-1687363714985-990685339050',
+        'photo-1609175215545-3b41b17d9e1e',
+    ];
+
     // Product lớn: 3 option, 12 × 6 × 3 = 216 variant (đại diện case nhiều variant)
     const BIG_OPTIONS = [
         { name: 'Color', values: ['White', 'Black', 'Navy', 'Sage', 'Clay', 'Cream', 'Oat', 'Charcoal', 'Sand', 'Moss', 'Rust', 'Pink'] },
@@ -54,7 +71,7 @@ window.BXGY_MOCK = (function () {
         ['Knit Beanie', 20, 'cap', ['Oat', 'Charcoal']],
         ['Enamel Pin Set', 9, 'gift', null],
         ['Bucket Hat', 22, 'cap', ['Khaki', 'Black']],
-        ['Bandana', 10, 'gift', ['Red', 'Navy']],
+        ['Ceramic Trinket Dish', 10, 'gift', ['White', 'Sand']],
         ['Sticker Pack', 6, 'gift', null],
         ['Woven Keychain', 8, 'gift', null],
         ['Sport Headband', 11, 'gift', ['White', 'Black']],
@@ -68,6 +85,7 @@ window.BXGY_MOCK = (function () {
             id: `b${i + 1}`,
             title, price, compare, max,
             icon: 'tee',
+            image: img(TEE_IMAGES[i]),
             bg: PALETTE[i % PALETTE.length][0],
             fg: PALETTE[i % PALETTE.length][1],
             options,
@@ -81,6 +99,7 @@ window.BXGY_MOCK = (function () {
             id: `g${i + 1}`,
             title, price, compare: price, max: 1,
             icon,
+            image: img(GIFT_IMAGES[i]),
             bg: PALETTE[(i + 3) % PALETTE.length][0],
             fg: PALETTE[(i + 3) % PALETTE.length][1],
             options,
@@ -102,6 +121,7 @@ window.BXGY_MOCK = (function () {
         {
             id: 'fixed-fixed', label: 'Fixed → Fixed',
             title: 'Get the Starter Set + a free cap',
+            subtitle: 'Everything you need, bundled at a better price',
             noun: 'item',
             trigger: { type: 'fixed', items: T(['b1', 'b2', 'b3'], [1, 2, 1]) },
             reward:  { type: 'fixed', items: T(['g1'], [1]) },
@@ -109,6 +129,7 @@ window.BXGY_MOCK = (function () {
         {
             id: 'fixed-mix', label: 'Fixed → Mix & match',
             title: 'Buy the Starter Set, pick a free gift',
+            subtitle: 'Get the full set and choose a gift you love',
             noun: 'item',
             trigger: { type: 'fixed', items: T(['b1', 'b2', 'b3'], [1, 2, 1]) },
             reward:  { type: 'mixMatch', chooseQty: 1, items: T(['g1', 'g2', 'g3']) },
@@ -116,6 +137,7 @@ window.BXGY_MOCK = (function () {
         {
             id: 'mix-fixed', label: 'Mix & match → Fixed',
             title: 'Buy any 4 tees, get free socks',
+            subtitle: 'Mix sizes and colors — socks are on us',
             noun: 'tee',
             trigger: { type: 'mixMatch', minQty: 4, items: T(['b1', 'b2', 'b3']) },
             reward:  { type: 'fixed', items: T(['g3'], [1]) },
@@ -123,6 +145,7 @@ window.BXGY_MOCK = (function () {
         {
             id: 'mix-mix', label: 'Mix & match → Mix & match',
             title: 'Buy any 3 tees, choose a free gift',
+            subtitle: 'Combine your favorite tees and pick a gift',
             noun: 'tee',
             trigger: { type: 'mixMatch', minQty: 3, items: T(['b1', 'b2', 'b3']) },
             reward:  { type: 'mixMatch', chooseQty: 1, items: T(['g1', 'g2']) },
@@ -130,6 +153,7 @@ window.BXGY_MOCK = (function () {
         {
             id: 'spend-fixed', label: 'Spend → Fixed',
             title: 'Spend $100, get a free tote',
+            subtitle: 'Shop any items below to unlock your tote',
             noun: 'item',
             trigger: { type: 'spend', minAmount: 100, items: T(['b4', 'b5', 'b6']) },
             reward:  { type: 'fixed', items: T(['g2'], [1]) },
@@ -137,6 +161,7 @@ window.BXGY_MOCK = (function () {
         {
             id: 'spend-mix', label: 'Spend → Mix & match',
             title: 'Spend $120, choose 2 free gifts',
+            subtitle: 'Reach $120 and pick two gifts on us',
             noun: 'item',
             trigger: { type: 'spend', minAmount: 120, items: T(['b1', 'b2', 'b3']) },
             reward:  { type: 'mixMatch', chooseQty: 2, items: T(['g1', 'g4', 'g6']) },
@@ -144,6 +169,7 @@ window.BXGY_MOCK = (function () {
         {
             id: 'stress', label: 'Stress: 15 buys / 10 gifts',
             title: 'Buy any 5 tees, choose a free gift',
+            subtitle: 'Large catalog stress test',
             noun: 'tee',
             trigger: { type: 'mixMatch', minQty: 5, items: T(buys.map((p) => p.id)) },
             reward:  { type: 'mixMatch', chooseQty: 1, items: T(gets.map((p) => p.id)) },

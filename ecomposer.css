@@ -1,0 +1,155 @@
+/* =====================================================================
+   BXGY — view "ecomposer" (layout Figma EC_App 2026, node 687-44)
+   Dùng token & component từ bxgy-ec2026.css. File này chỉ thêm phần
+   layout riêng: header căn giữa + progress row, card horizontal,
+   divider tiêu đề reward, summary căn giữa.
+   ===================================================================== */
+
+/* ---------- Header + progress (Figma: title 20/600, subtitle 14/500, progress row 12/600) ---------- */
+.ec-header { text-align: center; }
+.ec-header .bxgy-title { margin-top: 0; }
+.ec-subtitle { margin-top: var(--ec-space-3); font-size: 14px; line-height: 1.25; font-weight: 500; color: var(--ec-ink); }
+
+.ec-progress { max-width: 460px; margin: var(--ec-space-4) auto 0; text-align: left; }
+.ec-progress-row {
+    display: flex; justify-content: space-between; gap: var(--ec-space-3);
+    margin-bottom: var(--ec-space-3);
+    font-size: 12px; line-height: 1; font-weight: 600; color: var(--ec-ink);
+}
+.ec-progress-count { color: var(--ec-success); font-variant-numeric: tabular-nums; }
+.ec-progress .bxgy-bar { display: block; }
+.ec-progress-hint { margin-top: var(--ec-space-3); text-align: center; font-size: 14px; line-height: 1.25; font-weight: 500; color: var(--ec-ink); }
+.ec-progress-hint strong { font-weight: 600; }
+
+/* ---------- Product card — HORIZONTAL (Figma: ảnh trái, info phải) ---------- */
+.bxgy-grid.ec-grid-h { grid-template-columns: minmax(0, 1fr); }
+/* Ảnh luôn VUÔNG, rộng ≈36% card (84–120px). Khi ảnh cao hơn khối nội dung
+   (card rộng), nội dung được CĂN GIỮA theo chiều dọc thay vì thu nhỏ ảnh.
+   % trong grid track tính theo chính card. */
+.bxgy-tile.ec-card {
+    display: grid;
+    grid-template-columns: clamp(84px, 36%, 120px) minmax(0, 1fr);
+    align-items: center;
+    gap: var(--ec-space-3);
+}
+.ec-card-media { width: 100%; aspect-ratio: 1; }
+.ec-card-media > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+/* Khối nội dung kéo hết chiều cao card và căn giữa theo chiều dọc */
+.ec-card-body { align-self: stretch; justify-content: center; }
+.ec-card-media .bxgy-count svg { width: 10px; height: 10px; }
+.ec-card-body { display: flex; flex-direction: column; gap: var(--ec-space-2); min-width: 0; }
+.ec-card .bxgy-tile-title { min-height: 0; }
+.ec-card-price { font-size: 14px; line-height: 1; font-weight: 600; font-variant-numeric: tabular-nums; }
+.ec-card-price s { margin-right: var(--ec-space-1); font-weight: 400; color: var(--ec-ink-60); }
+.ec-card .bxgy-tile-variants { margin-top: 0; }
+.ec-card-action { margin-top: var(--ec-space-1); }
+.ec-card-action > .bxgy-tile-btn,
+.ec-card-action > .bxgy-tile-select,
+.ec-card-action > .bxgy-tile-static { width: 100%; }
+.ec-card-stepper { display: flex; width: 100%; justify-content: space-between; }
+
+/* GIFT tag (Figma: #D9FA74, radius 4, 10/600 uppercase, cao 20) */
+.ec-gift-tag {
+    align-self: flex-start;
+    display: inline-flex; align-items: center;
+    height: var(--ec-tag-h); padding: 0 var(--ec-space-2);
+    border-radius: var(--ec-r-control);
+    background: var(--ec-lime); color: var(--ec-ink);
+    font-size: 10px; line-height: 1; font-weight: 600; text-transform: uppercase;
+}
+
+/* Trạng thái card horizontal */
+.ec-card[data-state="locked"] .ec-card-media,
+.ec-card[data-state="locked"] .ec-card-body > :not(.ec-card-action) { opacity: .4; }
+.ec-card[data-state="soldout"] .ec-card-price,
+.ec-card[data-state="soldout"] .bxgy-tile-title { color: var(--ec-ink-60); }
+.ec-card[data-state="soldout"] .ec-gift-tag { background: var(--ec-ink-04); color: var(--ec-ink-60); }
+
+/* ---------- Reward: divider title (Figma: line 1px #000 20% — TITLE 14/600 — pill) ---------- */
+.ec-divider { display: flex; align-items: center; gap: var(--ec-space-3); }
+.ec-divider::before,
+.ec-divider::after { content: ""; flex: 1; border-top: 1px solid var(--ec-ink-20); }
+.ec-divider-title { font-size: 14px; line-height: 1; font-weight: 600; text-transform: uppercase; color: var(--ec-ink); white-space: nowrap; }
+.ec-reward-sub { margin: var(--ec-space-2) 0 var(--ec-space-3); text-align: center; font-size: 12px; line-height: 1.25; color: var(--ec-ink-60); }
+
+/* ---------- Summary (Figma: căn giữa, total 14/500 + 20/600, save 12/400 + đỏ 600, CTA full) ---------- */
+.ec-summary { display: grid; gap: var(--ec-space-3); text-align: center; }
+.ec-total { font-size: 14px; line-height: 1.4; font-weight: 500; color: var(--ec-ink); }
+.ec-total s { margin: 0 var(--ec-space-2); color: var(--ec-ink-60); }
+.ec-total strong { font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; vertical-align: -1px; }
+.ec-total--empty { color: var(--ec-ink-60); }
+.ec-save { font-size: 12px; line-height: 1; font-weight: 400; color: var(--ec-ink); }
+.ec-save b { font-weight: 600; color: var(--ec-danger); }
+.ec-summary .bxgy-cta { width: 100%; }
+
+/* ---------- Thu gọn danh sách horizontal ---------- */
+[data-layout="horizontal"][data-collapsed] > li:nth-child(n) { display: grid; }
+[data-bxgy-list="buys"][data-layout="horizontal"][data-collapsed] > li:nth-child(n+4),
+[data-bxgy-list="gets"][data-layout="horizontal"][data-collapsed] > li:nth-child(n+5) { display: none; }  /* quà: tối đa 4 trước khi thu gọn, tránh ẩn quà đã chọn */
+
+/* ---------- ≥ 560px: horizontal 2 cột (như Figma) ---------- */
+@container widget (width >= 34.75rem) {
+    .bxgy-grid.ec-grid-h { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    [data-bxgy-list="buys"][data-layout="horizontal"][data-collapsed] > li:nth-child(n+4) { display: grid; }
+    [data-bxgy-list="buys"][data-layout="horizontal"][data-collapsed] > li:nth-child(n+5) { display: none; }
+}
+
+/* =====================================================================
+   CARD ĐỀU NHAU + TITLE 1 DÒNG (áp cho cả horizontal & vertical trong view ecomposer)
+   ===================================================================== */
+/* Tên sản phẩm: 1 dòng, cắt "…" (tên đầy đủ ở tooltip title) */
+.bxgy-widget[data-bxgy-view="ecomposer"] .bxgy-tile-title {
+    display: block;
+    min-height: 0;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+/* Mọi hàng trong lưới cao bằng nhau → card đều kích thước */
+.bxgy-widget[data-bxgy-view="ecomposer"] .bxgy-grid { grid-auto-rows: 1fr; }
+/* Horizontal: action luôn nằm đáy card */
+.ec-card-action { padding-top: var(--ec-space-1); }
+
+/* =====================================================================
+   KHỔ RỘNG (view ecomposer): luôn 1 CỘT, dùng chiều rộng để tăng số card / hàng
+   Ghi đè layout 2 cột (rail) của bxgy-ec2026.css. Mốc đã trừ viền 2px × 2.
+     Horizontal: 1 → 2 (≥560) → 3 (≥896)
+     Vertical:   2 → 3 (≥560) → 4 (≥768) → 5 (≥992) → 6 (≥1152)
+   Collapse: Buys 2 hàng; Gets 1 hàng (vertical) / 2 hàng (horizontal).
+   ===================================================================== */
+@container widget (width >= 47.75rem) {
+    .bxgy-widget[data-bxgy-view="ecomposer"] .bxgy-grid:not(.ec-grid-h) { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .bxgy-widget[data-bxgy-view="ecomposer"] [data-bxgy-list][data-layout="vertical"][data-collapsed] > li:nth-child(n) { display: flex; }
+    .bxgy-widget[data-bxgy-view="ecomposer"] [data-bxgy-list="buys"][data-layout="vertical"][data-collapsed] > li:nth-child(n+9),
+    .bxgy-widget[data-bxgy-view="ecomposer"] [data-bxgy-list="gets"][data-layout="vertical"][data-collapsed] > li:nth-child(n+5) { display: none; }
+}
+
+@container widget (width >= 55.75rem) {
+    .bxgy-widget[data-bxgy-view="ecomposer"] .bxgy-layout {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: none;
+        column-gap: 0;
+        row-gap: 1.5rem;
+        padding: 1.5rem;
+    }
+    .bxgy-widget[data-bxgy-view="ecomposer"] .bxgy-layout > * { grid-column: auto; grid-row: auto; }
+
+    .bxgy-widget[data-bxgy-view="ecomposer"] .bxgy-grid.ec-grid-h { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .bxgy-widget[data-bxgy-view="ecomposer"] [data-bxgy-list][data-layout="horizontal"][data-collapsed] > li:nth-child(n) { display: grid; }
+    .bxgy-widget[data-bxgy-view="ecomposer"] [data-bxgy-list][data-layout="horizontal"][data-collapsed] > li:nth-child(n+7) { display: none; }
+
+    /* giữ 4 cột vertical (ghi đè rule 2/4 cột theo container "buys" của bản cũ) */
+    .bxgy-widget[data-bxgy-view="ecomposer"] [data-bxgy-list][data-layout="vertical"] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+@container widget (width >= 61.75rem) {
+    .bxgy-widget[data-bxgy-view="ecomposer"] [data-bxgy-list][data-layout="vertical"] { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .bxgy-widget[data-bxgy-view="ecomposer"] [data-bxgy-list][data-layout="vertical"][data-collapsed] > li:nth-child(n) { display: flex; }
+    .bxgy-widget[data-bxgy-view="ecomposer"] [data-bxgy-list="buys"][data-layout="vertical"][data-collapsed] > li:nth-child(n+11),
+    .bxgy-widget[data-bxgy-view="ecomposer"] [data-bxgy-list="gets"][data-layout="vertical"][data-collapsed] > li:nth-child(n+6) { display: none; }
+}
+
+@container widget (width >= 71.75rem) {
+    .bxgy-widget[data-bxgy-view="ecomposer"] [data-bxgy-list][data-layout="vertical"] { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+    .bxgy-widget[data-bxgy-view="ecomposer"] [data-bxgy-list][data-layout="vertical"][data-collapsed] > li:nth-child(n) { display: flex; }
+    .bxgy-widget[data-bxgy-view="ecomposer"] [data-bxgy-list="buys"][data-layout="vertical"][data-collapsed] > li:nth-child(n+13),
+    .bxgy-widget[data-bxgy-view="ecomposer"] [data-bxgy-list="gets"][data-layout="vertical"][data-collapsed] > li:nth-child(n+7) { display: none; }
+}

@@ -25,6 +25,10 @@
     const isSoldOut = (p) => !p.variants.some((v) => v.available);
     const soldOutCopy = (p) => ({ ...p, variants: p.variants.map((v) => ({ ...v, available: false })) });
     const zeros = (products) => products.map((p) => p.variants.map(() => 0));
+    // Ảnh sản phẩm: ảnh thật nếu có, fallback icon minh hoạ. Inline style để chạy với cả 2 stylesheet.
+    const media = (p) => (p.image
+        ? `<img src="${p.image}" alt="" loading="lazy" decoding="async" class="bxgy-img" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit">`
+        : icon(p.icon));
     const clone = (sel) => sel.map((row) => [...row]);
 
     /* =====================================================================
@@ -116,8 +120,11 @@
         const blocked = t.type === 'fixed' && buys.some(isSoldOut);
         const lockable = t.type !== 'fixed';
         const canCheckout = qualified && !blocked && giftsNeeded === 0;
+        // Tổng giá gốc (giá so sánh của Buys + giá trị quà khi đã mở khoá) để hiện gạch ngang cạnh tổng
+        const compareTotal = sum(buys.map((p, i) => (p.compare || p.price) * sum(tSel[i]))) + (qualified ? giftValue : 0);
+        const empty = t.type !== 'fixed' && units === 0;
 
-        return { t, r, units, amount, qualified, remaining, rUnits, giftValue, potential, giftsNeeded, blocked, lockable, canCheckout };
+        return { t, r, units, amount, qualified, remaining, rUnits, giftValue, potential, giftsNeeded, blocked, lockable, canCheckout, compareTotal, empty };
     }
 
     /* =====================================================================
@@ -183,7 +190,8 @@
             ? `<span class="bxgy-free">Free</span> <s>${money(p.price)}</s>`
             : `<span>${money(p.price)}</span>${p.compare ? ` <s>${money(p.compare)}</s>` : ''}`;
         const meta = !fixed && group === 'buys' ? `<p class="bxgy-tile-limit">Up to ${p.max}</p>` : '';
-        const picked = !fixed && count
+        // Product 1 variant: số lượng đã có trên badge → không lặp lại dòng variant
+        const picked = !fixed && count && !isSingle(p)
             ? `<p class="bxgy-tile-variants">${p.variants.map((v, vi) => (qtys[vi]
                 ? (isSingle(p) ? `×${qtys[vi]}` : `${esc(v.title)}${qtys[vi] > 1 ? ` ×${qtys[vi]}` : ''}`) : null)).filter(Boolean).join(', ')}</p>`
             : '';
@@ -197,13 +205,15 @@
                 : `<button type="button" class="bxgy-tile-select" aria-label="Change variant of ${esc(p.title)}"
                            data-bxgy-open-sheet${locked ? ' disabled' : ''}>${esc(cur.title)}</button>`;
         } else if (locked) control = `<button type="button" class="bxgy-tile-btn" disabled>${icon('lock')} Locked</button>`;
+        // Product 1 variant: thêm thẳng, không cần mở sheet
+        else if (isSingle(p) && !count) control = `<button type="button" class="bxgy-tile-btn" data-bxgy-quick-add>${icon('plus')} Add</button>`;
         else control = `<button type="button" class="bxgy-tile-btn" data-bxgy-open-sheet>${count ? 'Edit' : `${icon('plus')} Choose`}</button>`;
 
         return `
             <li class="bxgy-tile" data-bxgy-item data-group="${group}" data-index="${i}" data-state="${state}">
-                <div class="bxgy-thumb" style="background:${p.bg};color:${p.fg}">${icon(p.icon)}${sale}${badge}</div>
+                <div class="bxgy-thumb" style="background:${p.bg};color:${p.fg}">${media(p)}${sale}${badge}</div>
                 <div class="bxgy-tile-body">
-                    <h4 class="bxgy-tile-title">${esc(p.title)}</h4>
+                    <h4 class="bxgy-tile-title" title="${esc(p.title)}">${esc(p.title)}</h4>
                     <p class="bxgy-tile-price">${price}</p>
                     ${meta}${picked}
                 </div>
@@ -260,12 +270,201 @@
         return `
             <footer class="bxgy-summary" data-bxgy-summary>
                 <div>
-                    <p class="bxgy-summary-label">Total · ${plural(items, 'item')}</p>
-                    <p class="bxgy-summary-total">${money2(m.amount)}</p>
+                    ${m.empty
+                        ? `<p class="bxgy-summary-label">Total</p>
+                           <p class="bxgy-summary-empty">No items selected yet</p>`
+                        : `<p class="bxgy-summary-label">Total · ${plural(items, 'item')}</p>
+                           <p class="bxgy-summary-total">${m.compareTotal > m.amount ? `<s class="bxgy-summary-compare">${money2(m.compareTotal)}</s> ` : ''}${money2(m.amount)}</p>`}
                     <p class="bxgy-summary-save">${save}</p>
                 </div>
                 <button type="button" class="bxgy-cta" data-bxgy-cta${m.canCheckout ? '' : ' disabled'}>${label}</button>
             </footer>`;
+    }
+
+    /* =====================================================================
+       VIEW "ecomposer" — layout theo Figma EC_App 2026, card gom action về sheet
+       Card layout: merchant chọn (auto | horizontal | vertical). Auto: ≤ 4 item → horizontal.
+       ===================================================================== */
+    const VIEW = widget.dataset.bxgyView || 'prototype';
+    const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
+
+    function cardLayoutFor(list) {
+        if (VIEW !== 'ecomposer') return 'vertical';
+        const mode = prefs.cardLayout || 'auto';
+        return mode === 'auto' ? (list.length <= 4 ? 'horizontal' : 'vertical') : mode;
+    }
+
+    function ctaLabel(m) {
+        if (m.blocked) return 'Sold out';
+        if (!m.qualified) return m.t.type === 'mixMatch'
+            ? `Add ${plural(m.remaining, `more ${offer.noun}`)} to continue`
+            : `Spend ${money2(m.remaining)} more to continue`;
+        if (m.giftsNeeded) return `Choose ${plural(m.giftsNeeded, 'free gift')} to continue`;
+        return `Add bundle to cart · ${money2(m.amount)}`;
+    }
+
+    function renderHeaderEC(m) {
+        const { t } = m;
+        let progress = '';
+        if (t.type === 'fixed') {
+            if (m.blocked) {
+                const n = buys.filter(isSoldOut).length;
+                progress = `<p class="bxgy-included is-blocked">${icon('x')} ${plural(n, 'item')} in this bundle ${n === 1 ? 'is' : 'are'} sold out</p>`;
+            }
+        } else {
+            const mix = t.type === 'mixMatch';
+            const target = mix ? t.minQty : t.minAmount;
+            const now = mix ? m.units : m.amount;
+            const p = Math.min(100, pct(now, target));
+            const count = mix
+                ? `${Math.min(m.units, t.minQty)}/${t.minQty} ${offer.noun}s added (${p}%)`
+                : `${money(Math.min(m.amount, t.minAmount))} / ${money(t.minAmount)} spent (${p}%)`;
+            let hint;
+            if (!m.qualified) hint = mix
+                ? `Add <strong>${plural(m.remaining, `more ${offer.noun}`)}</strong> to unlock your ${giftWord()}`
+                : `Spend <strong>${money2(m.remaining)} more</strong> to unlock your ${giftWord()}`;
+            else if (m.r.type === 'fixed') hint = `<span class="bxgy-done">Unlocked!</span> Your ${giftWord()} ${gets.length > 1 ? 'are' : 'is'} included.`;
+            else hint = m.giftsNeeded
+                ? `<span class="bxgy-done">Unlocked!</span> Now choose ${plural(m.giftsNeeded, 'free gift')} below.`
+                : `<span class="bxgy-done">Unlocked!</span> Your ${giftWord()} ${m.rUnits > 1 ? 'are' : 'is'} picked.`;
+            progress = `
+                <div class="ec-progress">
+                    <div class="ec-progress-row"><span>Your progress</span><span class="ec-progress-count">${count}</span></div>
+                    <div class="bxgy-bar" role="progressbar" aria-valuemin="0" aria-valuemax="${target}" aria-valuenow="${Math.min(now, target)}" aria-label="Bundle progress"><span style="width:${p}%"></span></div>
+                    <p class="ec-progress-hint" aria-live="polite">${hint}</p>
+                </div>`;
+        }
+        return `
+            <header class="ec-header">
+                <h2 id="bxgy-title" class="bxgy-title">${esc(offer.title)}</h2>
+                ${offer.subtitle ? `<p class="ec-subtitle">${esc(offer.subtitle)}</p>` : ''}
+                ${progress}
+            </header>`;
+    }
+
+    // Card ngang (Figma): ảnh trái, info phải, 1 action duy nhất
+    function renderTileH(m, group, p, i) {
+        const fixed = (group === 'buys' ? m.t.type : m.r.type) === 'fixed';
+        const qtys = (group === 'buys' ? tSel : rSel)[i];
+        const count = sum(qtys);
+        const soldOut = isSoldOut(p);
+        const locked = group === 'gets' && m.lockable && !m.qualified;
+        const max = group === 'buys' ? p.max : offer.reward.chooseQty;
+        const state = soldOut ? 'soldout' : locked ? 'locked' : fixed ? 'included'
+            : count === 0 ? 'idle' : count >= max ? 'maxed' : 'selected';
+
+        const badge = soldOut ? '<span class="bxgy-soldout">Sold out</span>'
+            : fixed ? `<span class="bxgy-count" aria-label="Quantity ${p.fixedQty}">×${p.fixedQty}</span>`
+            : group === 'buys' ? `<span class="bxgy-count" aria-label="${count} of ${max} selected">${count}/${max}</span>`
+            : count ? `<span class="bxgy-count" aria-label="Selected">${icon('check')}</span>` : '';
+
+        const price = group === 'gets'
+            ? `<s>${money2(p.price)}</s> <strong>Free</strong>`
+            : `${p.compare ? `<s>${money2(p.compare)}</s> ` : ''}<strong>${money2(p.price)}</strong>`;
+        // Dòng meta luôn có (card đều nhau, không trống):
+        //  đã chọn → liệt kê variant; chưa chọn → tóm tắt option ("2 colors · 3 sizes" / "One size")
+        const optionSummary = isSingle(p) ? 'One size'
+            : p.options.map((o) => `${o.values.length} ${o.name.toLowerCase()}${o.values.length > 1 ? (/s$/i.test(o.name) ? 'es' : 's') : ''}`).join(' · ');
+        const picked = fixed ? ''
+            : count && !isSingle(p)
+            ? `<p class="bxgy-tile-variants">${p.variants.map((v, vi) => (qtys[vi] ? `${esc(v.title)}${qtys[vi] > 1 ? ` ×${qtys[vi]}` : ''}` : null)).filter(Boolean).join(', ')}</p>`
+            : `<p class="bxgy-tile-variants">${optionSummary}</p>`;
+
+        let control;
+        if (soldOut) control = `<button type="button" class="bxgy-tile-btn" disabled>Sold out</button>`;
+        else if (locked) control = `<button type="button" class="bxgy-tile-btn" disabled>${icon('lock')} Locked</button>`;
+        else if (fixed) {
+            const cur = p.variants[qtys.findIndex((q) => q > 0)] || p.variants[firstAvail(p)];
+            control = isSingle(p) ? `<p class="bxgy-tile-static">One size</p>`
+                : `<button type="button" class="bxgy-tile-select" aria-label="Change variant of ${esc(p.title)}" data-bxgy-open-sheet>${esc(cur.title)}</button>`;
+        } else if (isSingle(p)) {
+            // 1 variant: stepper ngay trên card (không cần sheet)
+            const canInc = group === 'buys' ? count < p.max : count < max;
+            control = `
+                <div class="bxgy-stepper ec-card-stepper" role="group" aria-label="Quantity of ${esc(p.title)}">
+                    <button type="button" aria-label="Remove one" data-bxgy-step="-1"${count ? '' : ' disabled'}>${icon('minus')}</button>
+                    <output>${count}</output>
+                    <button type="button" aria-label="Add one" data-bxgy-step="1"${canInc ? '' : ' disabled'}>${icon('plus')}</button>
+                </div>`;
+        } else {
+            control = `<button type="button" class="bxgy-tile-btn" data-bxgy-open-sheet>${count ? `Edit (${count})` : `${icon('plus')} Choose options`}</button>`;
+        }
+
+        return `
+            <li class="bxgy-tile ec-card" data-bxgy-item data-group="${group}" data-index="${i}" data-state="${state}">
+                <div class="bxgy-thumb ec-card-media" style="background:${p.bg};color:${p.fg}">${media(p)}${badge}</div>
+                <div class="ec-card-body">
+                    ${group === 'gets' ? '<span class="ec-gift-tag">Gift</span>' : ''}
+                    <h4 class="bxgy-tile-title" title="${esc(p.title)}">${esc(p.title)}</h4>
+                    <p class="ec-card-price">${price}</p>
+                    ${picked}
+                    <div class="ec-card-action">${control}</div>
+                </div>
+            </li>`;
+    }
+
+    function renderListEC(m, group) {
+        const list = group === 'buys' ? buys : gets;
+        const layout = cardLayoutFor(list);
+        const tile = layout === 'horizontal' ? renderTileH : renderTile;
+        return `
+            <ul class="bxgy-grid${layout === 'horizontal' ? ' ec-grid-h' : ''}" data-bxgy-list="${group}" data-layout="${layout}" data-collapsed>
+                ${list.map((p, i) => tile(m, group, p, i)).join('')}
+            </ul>
+            <button type="button" class="bxgy-more" data-bxgy-more="${group}" data-label="${group === 'buys' ? `${offer.noun}s` : 'gifts'}" hidden></button>`;
+    }
+
+    function renderGetsEC(m) {
+        const { r } = m;
+        const pill = !m.lockable ? ''
+            : m.qualified ? `<span class="bxgy-locked-pill is-unlocked">${icon('check')} Unlocked</span>`
+            : `<span class="bxgy-locked-pill">${icon('lock')} Locked</span>`;
+        const sub = r.type === 'fixed'
+            ? (!m.lockable || m.qualified ? 'Included free with this bundle' : 'Included free once you unlock')
+            : `Choose ${r.chooseQty} of ${gets.length}${m.qualified ? ` · ${m.rUnits} chosen` : ''}`;
+        return `
+            <section class="ec-reward" data-bxgy-group="gets" aria-label="Free rewards">
+                <div class="ec-divider"><h3 class="ec-divider-title">Your free reward${(r.type === 'fixed' ? gets.length : r.chooseQty) > 1 ? 's' : ''}</h3>${pill}</div>
+                <p class="ec-reward-sub">${sub}</p>
+                <div class="bxgy-gift ec-reward-panel${m.lockable && m.qualified ? ' is-unlocked' : ''}">${renderListEC(m, 'gets')}</div>
+            </section>`;
+    }
+
+    function renderSummaryEC(m) {
+        const items = m.units + (m.qualified ? m.rUnits : 0);
+        const save = Math.max(0, m.compareTotal - m.amount);
+        const total = m.empty
+            ? `<p class="ec-total ec-total--empty">No items selected yet</p>`
+            : `<p class="ec-total">Total ${plural(items, 'item')} in this bundle :
+                   ${m.compareTotal > m.amount ? `<s>${money2(m.compareTotal)}</s>` : ''}<strong>${money2(m.amount)}</strong></p>`;
+        const saveLine = m.blocked ? 'This bundle is currently unavailable'
+            : m.qualified && save ? `You save <b>${money2(save)} (${pct(save, m.compareTotal)}%)</b>`
+            : `Unlock to save up to <b>${money2(m.potential)}</b>`;
+        return `
+            <footer class="ec-summary" data-bxgy-summary>
+                ${total}
+                <p class="ec-save">${saveLine}</p>
+                <button type="button" class="bxgy-cta" data-bxgy-cta${m.canCheckout ? '' : ' disabled'}>${ctaLabel(m)}</button>
+            </footer>`;
+    }
+
+    function drawEC() {
+        root.innerHTML = `
+            ${renderHeaderEC(model)}
+            <div data-bxgy-group="buys" class="ec-buys">${renderListEC(model, 'buys')}</div>
+            ${renderGetsEC(model)}
+            ${renderSummaryEC(model)}
+            <div class="bxgy-toast" role="status" aria-live="polite" data-bxgy-toast hidden></div>`;
+    }
+
+    // Stepper trên card (product 1 variant)
+    function stepItem(tile, d) {
+        if (d > 0) return quickAdd(tile);
+        const group = tile.dataset.group, i = Number(tile.dataset.index);
+        const row = (group === 'buys' ? tSel : rSel)[i];
+        const k = row.findIndex((q) => q > 0);
+        if (k >= 0) row[k]--;
+        draw();
     }
 
     function draw() {
@@ -274,7 +473,7 @@
         widget.dataset.reward = offer.reward.type;
         // giữ trạng thái "Show all" khi vẽ lại
         const expanded = [...widget.querySelectorAll('[data-bxgy-list]:not([data-collapsed])')].map((l) => l.dataset.bxgyList);
-        root.innerHTML = `
+        if (VIEW === 'ecomposer') drawEC(); else root.innerHTML = `
             <header>
                 <p class="bxgy-eyebrow">Bundle &amp; save</p>
                 <h2 id="bxgy-title" class="bxgy-title">${esc(offer.title)}</h2>
@@ -306,7 +505,9 @@
         const row = (group === 'buys' ? tSel : rSel)[i];
         const fixed = (group === 'buys' ? offer.trigger.type : offer.reward.type) === 'fixed';
         const cur = row.findIndex((q) => q > 0);
-        ss = { group, i, fixed, picked: [...p.variants[cur >= 0 ? cur : firstAvail(p)].options], qty: 1 };
+        const fresh = p.variants.findIndex((v, k) => v.available && !row[k]);
+        const start = fixed ? (cur >= 0 ? cur : firstAvail(p)) : (fresh >= 0 ? fresh : cur >= 0 ? cur : firstAvail(p));
+        ss = { group, i, fixed, picked: [...p.variants[start].options], qty: 1 };
         drawSheet();
         sheet.showModal();
     }
@@ -384,7 +585,7 @@
 
         sheetBody.innerHTML = `
             <div class="bxgy-sheet-head">
-                <div class="bxgy-thumb bxgy-thumb--sm" style="background:${p.bg};color:${p.fg}">${icon(p.icon)}</div>
+                <div class="bxgy-thumb bxgy-thumb--sm" style="background:${p.bg};color:${p.fg}">${media(p)}</div>
                 <div class="min-w-0 flex-1">
                     <h3 id="bxgy-sheet-title" class="bxgy-sheet-title">${esc(p.title)}</h3>
                     <p class="bxgy-sheet-price">${price}${ss.fixed ? ` · qty ${count}` : ` · up to ${max}`}</p>
@@ -400,6 +601,28 @@
         mutate(sheetRow());
         draw();
         if (sheet.open) drawSheet();
+    }
+
+    /* =====================================================================
+       QUICK ADD — product 1 variant: +1 ngay trên card
+       Quà mixMatch đã đủ số lượng chọn → đổi quà (bỏ quà chọn trước, chọn quà này)
+       ===================================================================== */
+    function quickAdd(tile) {
+        const group = tile.dataset.group;
+        const i = Number(tile.dataset.index);
+        const p = (group === 'buys' ? buys : gets)[i];
+        const k = firstAvail(p);
+        if (group === 'buys') {
+            if (sum(tSel[i]) < p.max) tSel[i][k]++;
+        } else {
+            const others = rSel.map((row, j) => (j === i ? 0 : sum(row)));
+            if (sum(others) >= offer.reward.chooseQty) {
+                const j = others.findIndex((n) => n > 0);
+                rSel[j] = rSel[j].map(() => 0);
+            }
+            rSel[i][k] = 1;
+        }
+        draw();
     }
 
     /* =====================================================================
@@ -450,6 +673,12 @@
         const t = e.target;
         if (t === sheet || t.closest('[data-bxgy-sheet-close]')) return sheet.close();
 
+        const step = t.closest('[data-bxgy-step]');
+        if (step) return stepItem(step.closest('[data-bxgy-item]'), Number(step.dataset.bxgyStep));
+
+        const quick = t.closest('[data-bxgy-quick-add]');
+        if (quick) return quickAdd(quick.closest('[data-bxgy-item]'));
+
         const opener = t.closest('[data-bxgy-open-sheet]');
         if (opener) {
             const tile = opener.closest('[data-bxgy-item]');
@@ -494,7 +723,7 @@
     /* =====================================================================
        PUBLIC API (dev preview bar gọi vào)
        ===================================================================== */
-    const DEFAULTS = { offerId: 'mix-mix', start: 'almost', soldOut: 'off' };
+    const DEFAULTS = { offerId: 'mix-mix', start: 'almost', soldOut: 'off', cardLayout: 'auto' };
     function load(p) {
         prefs = { ...DEFAULTS, ...p };
         offer = M.offers.find((o) => o.id === prefs.offerId) || M.offers[0];

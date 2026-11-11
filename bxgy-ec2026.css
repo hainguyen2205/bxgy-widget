@@ -1,0 +1,546 @@
+/* =====================================================================
+   BXGY WIDGET — EC_App 2026 design system
+   ---------------------------------------------------------------------
+   Visual refinement theo Figma "EC_App 2026 › EXT for app" (node 687-44).
+   Layout / cấu trúc / hành vi giữ nguyên như style.css (bản backup).
+   Mọi giá trị màu, viền, bo góc, chữ lấy từ token bên dưới — được đo
+   trực tiếp từ Figma (Properties panel). Không thêm giá trị ngoài token.
+   ===================================================================== */
+
+/* ===== Dev page (chỉ để test, giữ nguyên) ===== */
+body { font-family: "Inter", ui-sans-serif, system-ui, sans-serif; }
+
+.dev-preset {
+    padding: 0.25rem 0.5rem;
+    border: 1px solid #d4d4d4;
+    border-radius: 0.375rem;
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    background: #fff;
+}
+.dev-preset:hover { background: #f5f5f5; }
+.dev-preset[aria-pressed="true"] { background: #171717; border-color: #171717; color: #fff; }
+.dev-frame { flex-shrink: 0; min-width: 320px; }
+.dev-field { display: flex; align-items: center; gap: 0.5rem; }
+.dev-label { font-weight: 600; }
+.dev-seg { display: inline-flex; padding: 2px; border-radius: 0.5rem; background: #f0efed; }
+.dev-seg button { padding: 0.25rem 0.625rem; border-radius: 0.375rem; font-size: 0.8125rem; color: #57534e; }
+.dev-seg button[aria-checked="true"] { background: #fff; color: #1c1917; font-weight: 600; box-shadow: 0 1px 2px rgb(0 0 0 / .08); }
+.dev-seg.is-disabled { opacity: .4; }
+.dev-select {
+    height: 1.875rem; padding: 0 1.75rem 0 0.625rem;
+    border: 1px solid #d4d4d4; border-radius: 0.5rem;
+    background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2378716c' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 0.5rem center;
+    appearance: none; font-size: 0.8125rem; font-weight: 500;
+}
+
+/* =====================================================================
+   1. TOKENS (EC_App 2026)
+   ===================================================================== */
+.bxgy-widget {
+    /* Color */
+    --ec-ink: #000000;                       /* text, primary button, active border */
+    --ec-ink-60: rgb(0 0 0 / .60);           /* secondary text, compare price */
+    --ec-ink-20: rgb(0 0 0 / .20);           /* default border, disabled button bg, disabled icon */
+    --ec-ink-10: rgb(0 0 0 / .10);           /* subtle border (reward card) */
+    --ec-ink-08: rgb(0 0 0 / .08);           /* progress track */
+    --ec-ink-04: rgb(0 0 0 / .04);           /* subtle surface (reward container) */
+    --ec-tag: rgb(17 0 0 / .08);             /* neutral tag bg (LOCKED) */
+    --ec-surface: #FFFFFF;
+    --ec-success: #1C9622;                   /* progress fill, progress count */
+    --ec-lime: #D9FA74;                      /* GIFT tag, unlocked indicator */
+    --ec-danger: #AE1310;                    /* savings amount */
+    --ec-on-ink: #FFFFFF;
+
+    /* Radius */
+    --ec-r-badge: 2px;
+    --ec-r-control: 4px;                     /* select, small button, tag */
+    --ec-r-card: 8px;                        /* product card, CTA */
+    --ec-r-container: 10px;                  /* widget container */
+    --ec-r-panel: 12px;                      /* reward container */
+    --ec-r-pill: 100px;                      /* progress */
+
+    /* Size */
+    --ec-control-h: 28px;
+    --ec-cta-h: 52px;
+    --ec-tag-h: 20px;
+    --ec-progress-h: 7px;
+
+    /* Spacing */
+    --ec-space-1: 4px;
+    --ec-space-2: 6px;
+    --ec-space-3: 10px;
+    --ec-space-4: 16px;
+
+    /* Type (Inter) */
+    --ec-font: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+    /* Alias cho các rule layout dùng lại từ bản cũ */
+    --bxgy-primary: var(--ec-ink);
+    --bxgy-line: var(--ec-ink-20);
+    --bxgy-muted: var(--ec-ink-60);
+    --bxgy-surface: var(--ec-ink-04);
+    --bxgy-accent: var(--ec-success);
+}
+
+/* =====================================================================
+   2. CONTAINER + LAYOUT (giữ nguyên cấu trúc)
+   ===================================================================== */
+.bxgy-widget {
+    position: relative;
+    container: widget / inline-size;
+    max-width: 75rem;
+    margin-inline: auto;
+    border: 2px solid var(--ec-ink-20);
+    border-radius: var(--ec-r-container);
+    background: var(--ec-surface);
+    font-family: var(--ec-font);
+    color: var(--ec-ink);
+}
+.bxgy-widget button:not(:disabled) { cursor: pointer; }
+.bxgy-widget svg { flex-shrink: 0; }
+
+.bxgy-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.25rem; padding: var(--ec-space-4); }
+.bxgy-rail { display: grid; gap: 1.25rem; align-content: start; }
+[data-bxgy-group="buys"] { container: buys / inline-size; }
+
+/* =====================================================================
+   3. HEADER + PROGRESS
+   ===================================================================== */
+.bxgy-layout > header { text-align: center; }
+.bxgy-eyebrow {
+    font-size: 12px; line-height: 1; font-weight: 600;
+    text-transform: uppercase;
+    color: var(--ec-ink-60);
+}
+.bxgy-title {
+    margin-top: var(--ec-space-3);
+    font-size: 20px; line-height: 1.2; font-weight: 600;
+    text-transform: uppercase;
+    color: var(--ec-ink);
+}
+
+.bxgy-progress { display: flex; align-items: center; gap: var(--ec-space-1); margin-top: var(--ec-space-4); }
+.bxgy-slot { flex: 1; height: var(--ec-progress-h); border-radius: var(--ec-r-pill); background: var(--ec-ink-08); transition: background-color .25s; }
+.bxgy-slot.is-filled { background: var(--ec-success); }
+.bxgy-bar { flex: 1; height: var(--ec-progress-h); border-radius: var(--ec-r-pill); background: var(--ec-ink-08); overflow: hidden; }
+.bxgy-bar > span { display: block; height: 100%; border-radius: inherit; background: var(--ec-success); transition: width .3s; }
+.bxgy-progress-gift {
+    display: grid; place-items: center;
+    width: 29px; height: 22px; margin-left: var(--ec-space-2);
+    border-radius: var(--ec-r-control);
+    background: var(--ec-tag); color: var(--ec-ink);
+}
+.bxgy-progress-gift svg { width: 14px; height: 14px; }
+.bxgy-progress-gift.is-unlocked { background: var(--ec-lime); color: var(--ec-ink); }
+
+.bxgy-progress-text { margin-top: var(--ec-space-3); font-size: 14px; line-height: 1.3; font-weight: 500; color: var(--ec-ink); }
+.bxgy-progress-text strong { font-weight: 600; }
+.bxgy-done { font-weight: 600; color: var(--ec-success); }
+
+/* Trigger fixed: cảnh báo hết hàng */
+.bxgy-included {
+    display: flex; align-items: center; justify-content: center; gap: var(--ec-space-2);
+    margin-top: var(--ec-space-4); padding: var(--ec-space-3);
+    border-radius: var(--ec-r-card);
+    background: var(--ec-ink-04);
+    font-size: 12px; font-weight: 600; color: var(--ec-ink);
+}
+.bxgy-included svg { width: 14px; height: 14px; }
+.bxgy-included.is-blocked { color: var(--ec-danger); }
+
+/* =====================================================================
+   4. GROUP HEAD (Buys + Gets)
+   ===================================================================== */
+.bxgy-group-head { display: flex; align-items: center; justify-content: space-between; gap: var(--ec-space-3); margin-bottom: var(--ec-space-3); }
+.bxgy-group-head h3 {
+    display: flex; align-items: center; gap: var(--ec-space-2);
+    font-size: 14px; line-height: 1; font-weight: 600; text-transform: uppercase;
+    color: var(--ec-ink);
+}
+/* Bộ đếm tiến độ của Buys (Figma "0/3 items added": 12/600 #1C9622) */
+[data-bxgy-group="buys"] > .bxgy-group-head > span { font-size: 12px; font-weight: 600; color: var(--ec-success); font-variant-numeric: tabular-nums; }
+
+/* =====================================================================
+   5. PRODUCT CARD (tile)
+   ===================================================================== */
+.bxgy-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ec-space-3); }
+
+.bxgy-tile {
+    display: flex; flex-direction: column;
+    padding: var(--ec-space-3);
+    border-radius: var(--ec-r-card);
+    background: var(--ec-surface);
+    box-shadow: inset 0 0 0 1px var(--ec-ink-20);       /* border 1px #000 20% — inset để không lệch layout */
+    transition: box-shadow .15s;
+}
+.bxgy-tile[data-state="selected"],
+.bxgy-tile[data-state="maxed"] { box-shadow: inset 0 0 0 2px var(--ec-ink); }   /* active = 2px #000 (reward container active) */
+.bxgy-tile[data-state="included"] { box-shadow: inset 0 0 0 1px var(--ec-ink-20); }
+
+.bxgy-thumb {
+    position: relative;
+    display: grid; place-items: center;
+    aspect-ratio: 1;
+    border-radius: var(--ec-r-control);
+}
+.bxgy-thumb > svg { position: absolute; inset: 20%; width: 60%; height: 60%; }
+
+/* Badge số lượng (Figma "0/2": #000, radius 2, 10/600 trắng) */
+.bxgy-count {
+    position: absolute; top: var(--ec-space-2); right: var(--ec-space-2);
+    display: grid; place-items: center;
+    min-width: 24px; height: var(--ec-tag-h); padding: 0 var(--ec-space-1);
+    border-radius: var(--ec-r-badge);
+    background: var(--ec-ink); color: var(--ec-on-ink);
+    font-size: 10px; line-height: 1; font-weight: 600; font-variant-numeric: tabular-nums;
+}
+.bxgy-tile[data-state="maxed"] .bxgy-count { background: var(--ec-success); }
+
+/* Badge % giảm — cùng hệ badge */
+.bxgy-sale {
+    position: absolute; top: var(--ec-space-2); left: var(--ec-space-2);
+    display: grid; place-items: center;
+    height: var(--ec-tag-h); padding: 0 var(--ec-space-1);
+    border-radius: var(--ec-r-badge);
+    background: var(--ec-ink); color: var(--ec-on-ink);
+    font-size: 10px; line-height: 1; font-weight: 600; font-variant-numeric: tabular-nums;
+}
+.bxgy-sale:empty { display: none; }
+
+.bxgy-tile-body { flex: 1; padding: var(--ec-space-3) 0; }
+.bxgy-tile-title {
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    font-size: 14px; line-height: 1.25; font-weight: 500; color: var(--ec-ink);
+    min-height: 2.5em;
+}
+.bxgy-tile-price { margin-top: var(--ec-space-2); font-size: 14px; line-height: 1; font-weight: 600; font-variant-numeric: tabular-nums; }
+.bxgy-tile-price s { margin-left: var(--ec-space-1); font-weight: 400; color: var(--ec-ink-60); }
+.bxgy-tile-price s:empty { display: none; }
+.bxgy-tile-limit,
+.bxgy-tile-variants { margin-top: var(--ec-space-2); font-size: 12px; line-height: 1.25; font-weight: 400; color: var(--ec-ink-60); }
+.bxgy-tile-variants { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bxgy-tile-variants:empty { display: none; }
+
+/* Nút nhỏ (Figma "Add items": 28px, radius 4, viền 1px #000 20%, 12/600) */
+.bxgy-tile-btn,
+.bxgy-more {
+    display: flex; align-items: center; justify-content: center; gap: var(--ec-space-2);
+    height: var(--ec-control-h); padding: 0 var(--ec-space-3);
+    border: 1px solid var(--ec-ink-20);
+    border-radius: var(--ec-r-control);
+    background: var(--ec-surface);
+    font-size: 12px; line-height: 1; font-weight: 600; color: var(--ec-ink);
+    transition: border-color .15s;
+}
+.bxgy-tile-btn svg { width: 12px; height: 12px; }
+.bxgy-tile-btn:hover:not(:disabled),
+.bxgy-more:hover { border-color: var(--ec-ink); }
+.bxgy-tile-btn:disabled { border-color: transparent; background: var(--ec-ink-04); color: var(--ec-ink-60); cursor: not-allowed; }
+
+/* Select variant (Figma: 28px, radius 4, viền 1px #000 20%, 12/400) */
+.bxgy-tile-select {
+    width: 100%; height: var(--ec-control-h);
+    padding: 0 26px 0 var(--ec-space-3);
+    border: 1px solid var(--ec-ink-20);
+    border-radius: var(--ec-r-control);
+    background: var(--ec-surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right var(--ec-space-3) center;
+    appearance: none;
+    font-size: 12px; font-weight: 400; color: var(--ec-ink);
+    text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    transition: border-color .15s;
+}
+.bxgy-tile-select:hover:not(:disabled) { border-color: var(--ec-ink); }
+.bxgy-tile-select:disabled { color: var(--ec-ink-60); background-color: var(--ec-ink-04); cursor: not-allowed; }
+.bxgy-tile-static {
+    display: flex; align-items: center; justify-content: center;
+    height: var(--ec-control-h);
+    border-radius: var(--ec-r-control);
+    background: var(--ec-ink-04);
+    font-size: 12px; color: var(--ec-ink-60);
+}
+
+/* Show all / Show less */
+[data-bxgy-list="buys"][data-collapsed] > li:nth-child(n+5),
+[data-bxgy-list="gets"][data-collapsed] > li:nth-child(n+3) { display: none; }
+.bxgy-more { width: 100%; margin-top: var(--ec-space-3); }
+.bxgy-more[hidden] { display: none; }
+.bxgy-more::after {
+    content: ""; width: 5px; height: 5px; margin-top: -3px;
+    border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor;
+    transform: rotate(45deg);
+}
+.bxgy-more[aria-expanded="true"]::after { margin-top: 3px; transform: rotate(-135deg); }
+
+/* Sold out */
+.bxgy-tile[data-state="soldout"] { background: var(--ec-ink-04); box-shadow: inset 0 0 0 1px var(--ec-ink-10); }
+.bxgy-tile[data-state="soldout"] .bxgy-thumb > svg { opacity: .4; filter: grayscale(1); }
+.bxgy-tile[data-state="soldout"] .bxgy-tile-title,
+.bxgy-tile[data-state="soldout"] .bxgy-tile-price,
+.bxgy-tile[data-state="soldout"] .bxgy-free { color: var(--ec-ink-60); background: none; }
+.bxgy-soldout {
+    position: absolute; left: 50%; bottom: var(--ec-space-2); transform: translateX(-50%);
+    display: grid; place-items: center;
+    height: var(--ec-tag-h); padding: 0 var(--ec-space-2);
+    border-radius: var(--ec-r-badge);
+    background: var(--ec-ink); color: var(--ec-on-ink);
+    font-size: 10px; line-height: 1; font-weight: 600; text-transform: uppercase; white-space: nowrap;
+}
+
+/* =====================================================================
+   6. REWARD (Figma "Your free reward preview")
+   ===================================================================== */
+.bxgy-gift {
+    padding: var(--ec-space-3);
+    border: 2px solid var(--ec-ink-20);
+    border-radius: var(--ec-r-panel);
+    background: var(--ec-ink-04);
+}
+.bxgy-gift.is-unlocked { border-color: var(--ec-ink); }
+/* Trigger fixed không có khoá → quà luôn ở trạng thái active */
+.bxgy-widget[data-trigger="fixed"] .bxgy-gift { border-color: var(--ec-ink); }
+.bxgy-gift-title { color: var(--ec-ink); }
+.bxgy-gift-title svg { width: 14px; height: 14px; }
+.bxgy-gift-sub { margin: calc(var(--ec-space-2) * -1) 0 var(--ec-space-3); font-size: 12px; line-height: 1.25; color: var(--ec-ink-60); }
+
+/* Pill LOCKED / UNLOCKED (Figma: 22px, radius 4, 10/600 uppercase) */
+.bxgy-locked-pill {
+    display: inline-flex; align-items: center; gap: var(--ec-space-1);
+    height: 22px; padding: 0 var(--ec-space-2);
+    border-radius: var(--ec-r-control);
+    background: var(--ec-tag); color: var(--ec-ink);
+    font-size: 10px; line-height: 1; font-weight: 600; text-transform: uppercase;
+}
+.bxgy-locked-pill svg { width: 10px; height: 10px; }
+.bxgy-locked-pill.is-unlocked { background: var(--ec-lime); }
+
+/* Reward card (Figma: trắng, radius 8, viền 1px #000 10%) */
+.bxgy-gift .bxgy-tile { box-shadow: inset 0 0 0 1px var(--ec-ink-10); }
+.bxgy-gift .bxgy-tile[data-state="selected"],
+.bxgy-gift .bxgy-tile[data-state="maxed"] { box-shadow: inset 0 0 0 2px var(--ec-ink); }
+/* Locked: cả card mờ như Figma (trạng thái khoá) */
+.bxgy-tile[data-state="locked"] .bxgy-thumb,
+.bxgy-tile[data-state="locked"] .bxgy-tile-body { opacity: .4; }
+
+/* "Free" = tag GIFT (Figma: #D9FA74, radius 4, 10/600 uppercase) */
+.bxgy-free {
+    display: inline-flex; align-items: center;
+    height: var(--ec-tag-h); padding: 0 var(--ec-space-2);
+    border-radius: var(--ec-r-control);
+    background: var(--ec-lime); color: var(--ec-ink);
+    font-size: 10px; line-height: 1; font-weight: 600; text-transform: uppercase;
+    vertical-align: middle;
+}
+.bxgy-tile-price .bxgy-free + s { font-size: 14px; }
+
+/* =====================================================================
+   7. SUMMARY + CTA
+   ===================================================================== */
+.bxgy-summary { display: grid; gap: var(--ec-space-3); }
+.bxgy-summary-label { font-size: 14px; line-height: 1; font-weight: 500; color: var(--ec-ink); }
+.bxgy-summary-total { margin-top: var(--ec-space-2); font-size: 20px; line-height: 1; font-weight: 600; font-variant-numeric: tabular-nums; }
+.bxgy-summary-save { margin-top: var(--ec-space-2); font-size: 12px; line-height: 1; font-weight: 600; color: var(--ec-danger); }
+
+/* CTA (Figma: 52px, radius 8, #000 / disabled #000 20%, 18/600 trắng) */
+.bxgy-cta {
+    width: 100%; height: var(--ec-cta-h);
+    padding: 0 var(--ec-space-3);
+    border-radius: var(--ec-r-card);
+    background: var(--ec-ink); color: var(--ec-on-ink);
+    font-size: 18px; line-height: 1; font-weight: 600; white-space: nowrap;
+    transition: background-color .15s;
+}
+.bxgy-cta:hover:not(:disabled) { background: rgb(0 0 0 / .80); }
+.bxgy-cta:disabled { background: var(--ec-ink-20); color: var(--ec-on-ink); cursor: not-allowed; }
+.bxgy-cta--sm { width: auto; padding: 0 var(--ec-space-4); }
+
+/* Toast (mock add to cart) */
+.bxgy-toast {
+    position: absolute; left: 50%; bottom: var(--ec-space-4); transform: translateX(-50%);
+    display: flex; align-items: center; gap: var(--ec-space-2);
+    height: 40px; padding: 0 var(--ec-space-4);
+    border-radius: var(--ec-r-card);
+    background: var(--ec-ink); color: var(--ec-on-ink);
+    font-size: 12px; font-weight: 600; white-space: nowrap;
+    animation: bxgy-toast-in .2s ease-out;
+}
+.bxgy-toast[hidden] { display: none; }
+.bxgy-toast svg { width: 14px; height: 14px; color: var(--ec-lime); }
+.bxgy-toast small { font-weight: 400; opacity: .6; }
+@keyframes bxgy-toast-in { from { opacity: 0; transform: translate(-50%, 8px); } }
+
+/* Focus */
+.bxgy-widget :focus { outline: none; }
+.bxgy-widget :focus-visible { outline: 2px solid var(--ec-ink); outline-offset: 2px; }
+
+/* =====================================================================
+   8. VARIANT SHEET
+   ===================================================================== */
+.bxgy-sheet {
+    width: 100%; max-width: 100%; max-height: 85vh;
+    margin: auto 0 0; padding: 0;
+    border: 0;
+    border-radius: var(--ec-r-container) var(--ec-r-container) 0 0;
+    background: var(--ec-surface);
+    font-family: var(--ec-font);
+    color: var(--ec-ink);
+}
+.bxgy-sheet[open] { display: flex; flex-direction: column; animation: bxgy-sheet-in .22s ease-out; }
+.bxgy-sheet::backdrop { background: rgb(0 0 0 / .60); }
+@keyframes bxgy-sheet-in { from { transform: translateY(24px); opacity: 0; } }
+@media (min-width: 640px) {
+    .bxgy-sheet { max-width: 26rem; margin: auto; border: 2px solid var(--ec-ink-20); border-radius: var(--ec-r-container); }
+}
+.bxgy-sheet-inner { display: flex; flex-direction: column; min-height: 0; max-height: 85vh; }
+
+.bxgy-sheet-head { display: flex; align-items: center; gap: var(--ec-space-3); padding: var(--ec-space-4) var(--ec-space-4) var(--ec-space-3); }
+.bxgy-thumb--sm { width: 56px; flex-shrink: 0; aspect-ratio: 1; border-radius: var(--ec-r-control); }
+.bxgy-sheet-title { font-size: 14px; line-height: 1.25; font-weight: 600; }
+.bxgy-sheet-price { margin-top: var(--ec-space-1); font-size: 12px; line-height: 1.5; color: var(--ec-ink-60); }
+.bxgy-sheet-price strong { font-size: 14px; font-weight: 600; color: var(--ec-ink); }
+.bxgy-sheet-price s { color: var(--ec-ink-60); }
+
+.bxgy-icon-btn {
+    display: grid; place-items: center;
+    width: var(--ec-control-h); height: var(--ec-control-h); align-self: flex-start;
+    border: 1px solid var(--ec-ink-20);
+    border-radius: var(--ec-r-control);
+    background: var(--ec-surface);
+    transition: border-color .15s;
+}
+.bxgy-icon-btn:hover { border-color: var(--ec-ink); }
+.bxgy-icon-btn svg { width: 12px; height: 12px; }
+
+.bxgy-sheet-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 0 var(--ec-space-4) var(--ec-space-3); }
+.bxgy-sheet-section { padding: var(--ec-space-1) 0 var(--ec-space-4); border-bottom: 1px solid var(--ec-ink-20); }
+.bxgy-sheet-label {
+    display: flex; justify-content: space-between;
+    margin-bottom: var(--ec-space-3);
+    font-size: 12px; line-height: 1; font-weight: 600; color: var(--ec-ink);
+}
+.bxgy-sheet-label > span:last-child { color: var(--ec-success); font-variant-numeric: tabular-nums; }
+.bxgy-sheet-label .bxgy-free { height: auto; padding: 0; background: none; font-size: 12px; text-transform: none; color: var(--ec-success); }
+
+.bxgy-picks { display: grid; gap: var(--ec-space-2); }
+.bxgy-pick {
+    display: flex; align-items: center; gap: var(--ec-space-3);
+    padding: var(--ec-space-2) var(--ec-space-2) var(--ec-space-2) var(--ec-space-3);
+    border: 1px solid var(--ec-ink-10);
+    border-radius: var(--ec-r-card);
+}
+.bxgy-pick-name { flex: 1; min-width: 0; font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bxgy-pick-remove {
+    display: grid; place-items: center;
+    width: var(--ec-control-h); height: var(--ec-control-h);
+    border-radius: var(--ec-r-control); color: var(--ec-ink-60);
+}
+.bxgy-pick-remove:hover { background: var(--ec-ink-04); color: var(--ec-danger); }
+.bxgy-pick-remove svg { width: 12px; height: 12px; }
+.bxgy-picks-empty { padding: var(--ec-space-3); border-radius: var(--ec-r-card); background: var(--ec-ink-04); font-size: 12px; color: var(--ec-ink-60); }
+
+/* Stepper (Figma: box 28px, radius 4, viền 1px #000 20%, số 14/600, icon disabled #000 20%) */
+.bxgy-stepper {
+    display: inline-flex; align-items: center;
+    height: var(--ec-control-h);
+    border: 1px solid var(--ec-ink-20);
+    border-radius: var(--ec-r-control);
+    background: var(--ec-surface);
+}
+.bxgy-stepper button { display: grid; place-items: center; width: 26px; height: 100%; color: var(--ec-ink); }
+.bxgy-stepper button svg { width: 10px; height: 10px; }
+.bxgy-stepper button:disabled { color: var(--ec-ink-20); cursor: not-allowed; }
+.bxgy-stepper output { min-width: 20px; text-align: center; font-size: 14px; line-height: 1; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--ec-ink); }
+
+/* Option dropdown (cùng style select) */
+.bxgy-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr)); gap: var(--ec-space-3); padding-top: var(--ec-space-4); }
+.bxgy-option-label { display: block; margin-bottom: var(--ec-space-2); font-size: 12px; line-height: 1; font-weight: 600; color: var(--ec-ink); }
+.bxgy-option-select {
+    width: 100%; height: var(--ec-control-h);
+    padding: 0 26px 0 var(--ec-space-3);
+    border: 1px solid var(--ec-ink-20);
+    border-radius: var(--ec-r-control);
+    background: var(--ec-surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right var(--ec-space-3) center;
+    appearance: none;
+    font-size: 12px; font-weight: 400; color: var(--ec-ink);
+    text-overflow: ellipsis;
+    transition: border-color .15s;
+}
+.bxgy-option-select:hover { border-color: var(--ec-ink); }
+
+.bxgy-sheet-foot {
+    display: flex; align-items: center; justify-content: space-between; gap: var(--ec-space-3);
+    padding: var(--ec-space-3) var(--ec-space-4) var(--ec-space-4);
+    border-top: 1px solid var(--ec-ink-20);
+}
+.bxgy-foot-variant { display: flex; flex-direction: column; gap: var(--ec-space-1); flex: 1; min-width: 0; }
+.bxgy-foot-variant span { font-size: 14px; line-height: 1.25; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bxgy-foot-variant small { font-size: 12px; color: var(--ec-ink-60); }
+
+/* =====================================================================
+   9. BREAKPOINTS (giữ nguyên layout của bản cũ)
+   ===================================================================== */
+/* Container đo content-box: trừ viền 2px × 2 của widget → 560px = 34.75rem */
+@container widget (width >= 34.75rem) {
+    .bxgy-layout { gap: 1.5rem; }
+    .bxgy-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--ec-space-3); }
+
+    [data-bxgy-list="buys"][data-collapsed] > li:nth-child(n+5),
+    [data-bxgy-list="gets"][data-collapsed] > li:nth-child(n+3) { display: flex; }
+    [data-bxgy-list="buys"][data-collapsed] > li:nth-child(n+7),
+    [data-bxgy-list="gets"][data-collapsed] > li:nth-child(n+4) { display: none; }
+
+    .bxgy-summary { grid-template-columns: 1fr auto; align-items: center; gap: var(--ec-space-4); }
+    .bxgy-summary .bxgy-cta { width: auto; min-width: 16rem; padding: 0 var(--ec-space-4); }
+}
+
+@container widget (width >= 55.75rem) {
+    .bxgy-layout {
+        grid-template-columns: minmax(0, 1fr) 22rem;
+        grid-template-rows: auto 1fr;
+        column-gap: 2rem; row-gap: 1.5rem;
+        padding: 2rem;
+    }
+    .bxgy-layout > header { grid-column: 1; grid-row: 1; }
+    .bxgy-layout > [data-bxgy-group="buys"] { grid-column: 1; grid-row: 2; }
+    .bxgy-rail {
+        grid-column: 2; grid-row: 1 / span 2;
+        position: sticky; top: var(--bxgy-sticky-offset, 1.5rem); align-self: start;
+    }
+    .bxgy-progress { max-width: 36rem; margin-inline: auto; }
+    .bxgy-rail .bxgy-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .bxgy-summary { grid-template-columns: 1fr; gap: var(--ec-space-3); }
+    .bxgy-summary .bxgy-cta { width: 100%; }
+
+    [data-bxgy-list][data-collapsed] > li:nth-child(n) { display: flex; }
+    [data-bxgy-list="buys"][data-collapsed] > li:nth-child(n+9),
+    [data-bxgy-list="gets"][data-collapsed] > li:nth-child(n+5) { display: none; }
+}
+@container buys (width < 34rem) {
+    @container widget (width >= 55.75rem) {
+        [data-bxgy-list="buys"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+}
+/* 4 cột chỉ ở layout 2 cột (widget ≥ 896px); trước đó giữ 3 cột để không trống ô */
+@container buys (width >= 34rem) {
+    @container widget (width >= 55.75rem) {
+        [data-bxgy-list="buys"] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    }
+}
+
+/* Dev: chừa chỗ cho toolbar sticky */
+.dev-frame .bxgy-widget { --bxgy-sticky-offset: 7rem; }
+
+/* =====================================================================
+   10. UX REFINEMENTS
+   ===================================================================== */
+/* Tổng: giá gốc gạch ngang trước giá cuối (Figma "$196.00 80.00$": 14/500 #000 60%) */
+.bxgy-summary-compare { margin-right: var(--ec-space-2); font-size: 14px; font-weight: 500; color: var(--ec-ink-60); vertical-align: middle; }
+/* Trạng thái rỗng thay cho "$0.00" */
+.bxgy-summary-empty { margin-top: var(--ec-space-2); font-size: 14px; line-height: 1.25; font-weight: 500; color: var(--ec-ink-60); }
+
+/* Ảnh sản phẩm thật (.bxgy-img): cover trong khung, badge nằm trên ảnh */
+.bxgy-thumb { overflow: hidden; }
+.bxgy-thumb > .bxgy-count,
+.bxgy-thumb > .bxgy-sale,
+.bxgy-thumb > .bxgy-soldout { z-index: 1; }
+.bxgy-tile[data-state="soldout"] .bxgy-img { opacity: .4; filter: grayscale(1); }

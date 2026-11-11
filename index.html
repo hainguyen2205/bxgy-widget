@@ -7,7 +7,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <link rel="stylesheet" href="style.css">
+    <!-- Stylesheet của widget — đổi qua toolbar (Style): EComposer = bxgy-ec2026.css, Prototype = style.css -->
+    <link rel="stylesheet" href="bxgy-ec2026.css" data-dev-stylesheet>
     <title>BXGY Bundle Widget</title>
 </head>
 <body class="min-h-screen bg-[#ecebe8] text-neutral-900 antialiased">
@@ -35,6 +36,13 @@
                 <div class="dev-seg" role="radiogroup" aria-label="Preview sold out item" data-dev-opt="soldOut">
                     <button type="button" data-value="off">Off</button>
                     <button type="button" data-value="on">On</button>
+                </div>
+            </div>
+            <div class="dev-field">
+                <span class="dev-label">Style</span>
+                <div class="dev-seg" role="radiogroup" aria-label="Widget stylesheet" data-dev-opt="theme">
+                    <button type="button" data-value="ec">EComposer</button>
+                    <button type="button" data-value="proto">Prototype</button>
                 </div>
             </div>
             <button type="button" class="dev-preset" data-dev-reset title="Đưa selection về trạng thái Start">↺ Reset</button>
